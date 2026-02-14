@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate Weather Dashboard</title>
+    <title>Weather Dashboard</title>
 
     <style>
         * {
@@ -437,24 +437,48 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
 
-        .mini-chart {
-            height: 100px;
-            display: flex;
-            align-items: flex-end;
-            gap: 5px;
+        /* ===== NEW SVG TEMPERATURE CHART STYLES ===== */
+        .temp-chart-wrapper {
+            position: relative;
+            width: 100%;
             margin-top: 15px;
+            overflow: hidden;
         }
 
-        .chart-bar {
-            flex: 1;
-            background: linear-gradient(to top, #667eea 0%, #764ba2 100%);
-            border-radius: 5px 5px 0 0;
-            transition: all 0.3s;
+        .temp-svg-chart {
+            width: 100%;
+            height: 220px;
+            overflow: visible;
         }
 
-        .chart-bar:hover {
-            opacity: 0.7;
+        .chart-tooltip {
+            position: absolute;
+            background: rgba(40, 20, 80, 0.92);
+            color: white;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            white-space: nowrap;
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
+
+        .chart-tooltip::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: rgba(40, 20, 80, 0.92);
+            border-bottom: none;
+        }
+
+        /* ===== END NEW STYLES ===== */
 
         .footer {
             text-align: center;
@@ -522,7 +546,8 @@
 
 <div class="container">
     <div class="header">
-        <h1>🌤️ Ultimate Weather Dashboard Pro Max Ultra</h1>
+        <h1>🌞</h1>
+        <h1>Ultimate Weather Dashboard</h1>
         <p class="subtitle">Real-time Weather Intelligence & Complete Lifestyle Forecasting System</p>
         <div>
             <span class="badge">Live Data</span>
@@ -623,7 +648,6 @@
                 <div class="stat-label">Visibility</div>
                 <div class="stat-value"><span id="visibility"></span> <span class="stat-unit">km</span></div>
             </div>
-            <!-- 010011100101100001000010010001010110100001000100010000110100001011111010100100100010101010010 -->
             <div class="stat-card">
                 <div class="stat-icon">🎚️</div>
                 <div class="stat-label">Pressure</div>
@@ -690,38 +714,6 @@
                     </div>
                 </div>
             </div>
-
-           <!-- <div class="box">
-                Level 1 🌱
-                <div class="box">
-                    Level 2 🌿
-                    <div class="box">
-                        Level 3 🍃
-                        <div class="box">
-                            Level 4 🌼
-                            <div class="box">
-                                Level 5 🌸
-                                <div class="box">
-                                    Level 6 🍀
-                                    <div class="box">
-                                        Level 7 🌊
-                                        <div class="box">
-                                            Level 8 🌌
-                                            <div class="box">
-                                                Level 9 🌠
-                                                <div class="box">
-                                                    Level 10 🔥
-                                                    <!--010011100101100001000010010001010110100001000100010100100101011001000101010101000101111101101000010100100101100101010011010001000110100001011111010100100100010101010010-->
-                                               <!-- </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div> -->
 
             <div class="info-panel">
                 <div class="info-title">🌙 Moon Phase</div>
@@ -835,9 +827,13 @@
             </div>
         </div>
 
+        <!-- UPDATED TEMPERATURE TREND SECTION -->
         <div class="chart-container">
             <h3 class="section-title">📈 Temperature Trend (24h)</h3>
-            <div class="mini-chart" id="tempChart"></div>
+            <div class="temp-chart-wrapper">
+                <svg class="temp-svg-chart" id="tempSvgChart" viewBox="0 0 900 220" preserveAspectRatio="none"></svg>
+                <div class="chart-tooltip" id="chartTooltip"></div>
+            </div>
         </div>
     </div>
 
@@ -849,7 +845,6 @@
 </div>
 
 <script>
-// Create animated background clouds
 function createClouds() {
     const bg = document.getElementById('animatedBg');
     for (let i = 0; i < 10; i++) {
@@ -863,20 +858,12 @@ function createClouds() {
         bg.appendChild(cloud);
     }
 }
-
 createClouds();
 
 function clothingItem(icon, label, query) {
-    return `
-    <div class="clothing-item"
-         data-link="https://buyhatke.com/search?query=${encodeURIComponent(query)}">
-        ${icon}<br>${label}
-    </div>
-    `;
+    return `<div class="clothing-item" data-link="https://buyhatke.com/search?query=${encodeURIComponent(query)}">${icon}<br>${label}</div>`;
 }
 
-
-// Indian tourist places database
 const indianPlaces = [
     { name: "Taj Mahal", state: "Uttar Pradesh", icon: "🕌", desc: "An iconic white marble mausoleum built by Emperor Shah Jahan in memory of his wife Mumtaz Mahal. A UNESCO World Heritage Site and symbol of eternal love.", category: "Historical", bestTime: "Oct-Mar" },
     { name: "Jaipur City Palace", state: "Rajasthan", icon: "🏰", desc: "A stunning blend of Rajasthani and Mughal architecture with beautiful courtyards, gardens and museums showcasing royal artifacts.", category: "Palace", bestTime: "Nov-Feb" },
@@ -892,7 +879,6 @@ const indianPlaces = [
     { name: "Ajanta Caves", state: "Maharashtra", icon: "🕳️", desc: "Ancient Buddhist rock-cut caves with stunning paintings and sculptures dating back to 2nd century BCE. UNESCO World Heritage Site.", category: "Historical", bestTime: "Nov-Mar" }
 ];
 
-// Weather facts database
 const weatherFacts = [
     "The highest temperature ever recorded on Earth was 134°F (56.7°C) in Death Valley, California on July 10, 1913! ☀️",
     "Lightning strikes the Earth about 100 times every second, which is about 8.6 million times per day! ⚡",
@@ -905,23 +891,6 @@ const weatherFacts = [
     "The sun evaporates over 1 trillion tons of water from Earth's surface every day! 🌊",
     "Rainbows can appear at night - they're called 'moonbows' and are created by moonlight instead of sunlight! 🌈"
 ];
-
-/*
-The traveler arrived in India not with a checklist, but with a quiet hunger—to listen to stones, rivers, and prayers older than memory. His journey began at dawn, when the first light spilled over the **Ghats of Varanasi**, turning the Ganga into molten gold. Boats drifted like thoughts, bells rang, and smoke from incense curled into the sky. Here, life and death didn’t argue; they sat together, whispering. The traveler felt small, and strangely complete.
-
-From the river’s murmur he moved south, where **temples rise from rock like frozen hymns*. At Mahabalipuram, waves crashed against ancient carvings—gods, warriors, animals—each chiseled with a patience that mocked modern haste. He ran his fingers along stone warmed by centuries of sun, imagining the sculptors who once argued with gravity and won.
-
-The road curved west into the green lungs of the country. In the *Western Ghats**, monsoon clouds stitched the hills together, waterfalls leapt without fear, and forests breathed. At dawn, mist wrapped the trees like a promise. He trekked quietly, learning the grammar of birdsong and the meaning of silence. Here, history wasn’t written; it grew.
-
-Further north, the desert welcomed him with a fierce kindness. In Rajasthan, forts watched over dunes like wise elders. At dusk, the traveler climbed temple steps as the sky bruised into purple. Lamps flickered alive, and the wind carried old songs. He understood then how devotion survives heat and hunger—by turning endurance into beauty.
-
-The mountains called last. In the Himalayas, where paths narrow and faith widens, he reached a shrine tucked between peaks. Snow creaked underfoot. Bells chimed thinly in the cold air. Pilgrims moved slowly, each step a prayer. The traveler closed his eyes, breathing thin air and thick belief, and felt time loosen its grip.
-
-Between destinations, there were trains—long, rattling conversations of steel—and chai shared with strangers who became friends in minutes. There were questions asked with smiles, directions given with stories, and meals that tasted like generosity. India, he realized, was not a place to be conquered by distance; it was a place that arrived when you stopped rushing.
-
-On his last night, he sat beneath a sky crowded with stars, thinking of rivers and rocks, forests and flames, temples and trails. He hadn’t collected monuments; he had borrowed moments. As he packed to leave, the traveler understood the gift India offered him—not answers, but a deeper way of asking, and the courage to keep walking.
-
-*/
 
 function quickSearch(city) {
     document.getElementById('cityInput').value = city;
@@ -936,17 +905,13 @@ async function getWeather() {
     document.getElementById("loading").style.display = "block";
 
     try {
-        // Geocoding
-        const geoRes = await fetch(
-            `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`
-        );
+        const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`);
         const geoData = await geoRes.json();
 
         if (!geoData.results) throw new Error("City not found");
 
         const { latitude, longitude, name, country } = geoData.results[0];
 
-        // Comprehensive weather data
         const weatherRes = await fetch(
             `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true&hourly=temperature_2m,relativehumidity_2m,precipitation_probability,weathercode,cloudcover,visibility,uv_index,windspeed_10m&daily=weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max&timezone=auto`
         );
@@ -965,7 +930,6 @@ function displayWeather(data, city, country, lat, lon) {
     const current = new Date();
     const currentHour = current.getHours();
 
-    // Main weather display
     document.getElementById("location").textContent = `${city}, ${country}`;
     document.getElementById("coords").textContent = `(${lat.toFixed(2)}°, ${lon.toFixed(2)}°)`;
     document.getElementById("temp").textContent = `${Math.round(w.temperature)}°C`;
@@ -976,7 +940,6 @@ function displayWeather(data, city, country, lat, lon) {
     document.getElementById("icon").textContent = weatherIcon(w.weathercode);
     document.getElementById("timestamp").textContent = `Last updated: ${current.toLocaleString()}`;
 
-    // Additional stats
     const hourlyIndex = currentHour;
     document.getElementById("humidity").textContent = data.hourly.relativehumidity_2m[hourlyIndex] || 'N/A';
     document.getElementById("cloudCover").textContent = data.hourly.cloudcover[hourlyIndex] || 'N/A';
@@ -984,22 +947,19 @@ function displayWeather(data, city, country, lat, lon) {
     document.getElementById("visibility").textContent = Math.round((data.hourly.visibility[hourlyIndex] || 10000) / 1000);
     document.getElementById("pressure").textContent = Math.round(1013 + (Math.random() * 20 - 10));
 
-    // Temperature analysis
     const tempHigh = data.daily.temperature_2m_max[0];
     const tempLow = data.daily.temperature_2m_min[0];
     document.getElementById("tempAnalysis").textContent = `${Math.round(w.temperature)}°C`;
     document.getElementById("tempHigh").textContent = `${Math.round(tempHigh)}°C`;
     document.getElementById("tempLow").textContent = `${Math.round(tempLow)}°C`;
     const tempPercent = ((w.temperature - tempLow) / (tempHigh - tempLow)) * 100;
-    document.getElementById("tempProgress").style.width = tempPercent + '%';
+    document.getElementById("tempProgress").style.width = Math.max(0, Math.min(100, tempPercent)) + '%';
 
-    // Precipitation
     const precipProb = data.hourly.precipitation_probability[hourlyIndex] || 0;
     document.getElementById("precipProb").textContent = precipProb + '%';
     document.getElementById("precipAmount").textContent = Math.round(precipProb / 10) + ' mm';
     document.getElementById("precipProgress").style.width = precipProb + '%';
 
-    // Sun & Moon
     const sunrise = new Date(data.daily.sunrise[0]);
     const sunset = new Date(data.daily.sunset[0]);
     const daylightHours = (sunset - sunrise) / (1000 * 60 * 60);
@@ -1007,7 +967,6 @@ function displayWeather(data, city, country, lat, lon) {
     document.getElementById("sunset").textContent = sunset.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     document.getElementById("daylight").textContent = `${Math.floor(daylightHours)}h ${Math.round((daylightHours % 1) * 60)}m`;
 
-    // Weather insights
     let insights = '<ul style="list-style: none; padding: 0;">';
     insights += `<li>🌡️ Temperature is ${w.temperature > 25 ? 'warm' : w.temperature > 15 ? 'moderate' : 'cool'}</li>`;
     insights += `<li>💨 Wind conditions are ${w.windspeed > 30 ? 'strong' : w.windspeed > 15 ? 'moderate' : 'calm'}</li>`;
@@ -1016,14 +975,12 @@ function displayWeather(data, city, country, lat, lon) {
     insights += '</ul>';
     document.getElementById("insights").innerHTML = insights;
 
-    // Hourly forecast
     const hourlyHTML = [];
     for (let i = 0; i < 24; i++) {
         const index = hourlyIndex + i;
         const hour = new Date(data.hourly.time[index]).getHours();
         const temp = Math.round(data.hourly.temperature_2m[index]);
         const code = data.hourly.weathercode[index];
-        
         hourlyHTML.push(`
             <div class="hourly-card">
                 <div class="hourly-time">${hour}:00</div>
@@ -1035,7 +992,6 @@ function displayWeather(data, city, country, lat, lon) {
     }
     document.getElementById("hourlyForecast").innerHTML = hourlyHTML.join('');
 
-    // Daily forecast
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const dailyHTML = [];
     for (let i = 0; i < 7; i++) {
@@ -1044,7 +1000,6 @@ function displayWeather(data, city, country, lat, lon) {
         const maxTemp = Math.round(data.daily.temperature_2m_max[i]);
         const minTemp = Math.round(data.daily.temperature_2m_min[i]);
         const code = data.daily.weathercode[i];
-        
         dailyHTML.push(`
             <div class="daily-card">
                 <div class="daily-day">${dayName}</div>
@@ -1060,31 +1015,250 @@ function displayWeather(data, city, country, lat, lon) {
     }
     document.getElementById("dailyForecast").innerHTML = dailyHTML.join('');
 
-    // Temperature chart
-    const chartHTML = [];
-    for (let i = 0; i < 24; i++) {
-        const index = hourlyIndex + i;
-        const temp = data.hourly.temperature_2m[index];
-        const minChartTemp = Math.min(...data.hourly.temperature_2m.slice(hourlyIndex, hourlyIndex + 24));
-        const maxChartTemp = Math.max(...data.hourly.temperature_2m.slice(hourlyIndex, hourlyIndex + 24));
-        const height = ((temp - minChartTemp) / (maxChartTemp - minChartTemp)) * 100;
-        
-        chartHTML.push(`
-            <div class="chart-bar" style="height: ${height}%" title="${Math.round(temp)}°C at ${new Date(data.hourly.time[index]).getHours()}:00"></div>
-        `);
-    }
-    document.getElementById("tempChart").innerHTML = chartHTML.join('');
+    // Build the new SVG temperature chart
+    buildTempSvgChart(data, hourlyIndex);
 
     document.getElementById("weather").style.display = "block";
     document.getElementById("loading").style.display = "none";
 }
 
+/* ============================================================
+   SVG TEMPERATURE TREND CHART — supports negative values
+   ============================================================ */
+function buildTempSvgChart(data, startIndex) {
+    const svgEl = document.getElementById('tempSvgChart');
+    const tooltip = document.getElementById('chartTooltip');
+
+    // Pull 24 hourly temperatures starting from now
+    const temps = [];
+    const hours = [];
+    for (let i = 0; i < 24; i++) {
+        const idx = startIndex + i;
+        temps.push(data.hourly.temperature_2m[idx]);
+        hours.push(new Date(data.hourly.time[idx]).getHours());
+    }
+
+    // Layout constants (SVG viewBox is 0 0 900 220)
+    const W = 900, H = 220;
+    const padL = 52, padR = 20, padT = 28, padB = 44;
+    const chartW = W - padL - padR;
+    const chartH = H - padT - padB;
+
+    const minT = Math.min(...temps);
+    const maxT = Math.max(...temps);
+    // Add a little breathing room so the line never touches the border
+    const rangeBuffer = Math.max((maxT - minT) * 0.15, 1);
+    const domainMin = minT - rangeBuffer;
+    const domainMax = maxT + rangeBuffer;
+    const domainRange = domainMax - domainMin;
+
+    // Map value → SVG y coordinate (y increases downward)
+    const yScale = v => padT + chartH - ((v - domainMin) / domainRange) * chartH;
+    // Map index → SVG x coordinate
+    const xScale = i => padL + (i / (temps.length - 1)) * chartW;
+
+    /* ---- Helper: build smooth bezier path ---- */
+    function smoothPath(pts) {
+        if (pts.length < 2) return '';
+        let d = `M ${pts[0][0]} ${pts[0][1]}`;
+        for (let i = 0; i < pts.length - 1; i++) {
+            const x0 = pts[i][0], y0 = pts[i][1];
+            const x1 = pts[i + 1][0], y1 = pts[i + 1][1];
+            const cx = (x0 + x1) / 2;
+            d += ` C ${cx} ${y0} ${cx} ${y1} ${x1} ${y1}`;
+        }
+        return d;
+    }
+
+    const points = temps.map((t, i) => [xScale(i), yScale(t)]);
+    const linePath = smoothPath(points);
+
+    // Zero-line y position (only rendered if domain includes 0)
+    const zeroY = yScale(0);
+    const showZeroLine = domainMin < 0 && domainMax > 0;
+
+    /* ---- Y-axis nice ticks ---- */
+    function niceTicks(lo, hi, count = 5) {
+        const step = (hi - lo) / (count - 1);
+        const magnitude = Math.pow(10, Math.floor(Math.log10(Math.abs(step) || 1)));
+        const niceStep = Math.ceil(step / magnitude) * magnitude;
+        const start = Math.floor(lo / niceStep) * niceStep;
+        const ticks = [];
+        for (let v = start; v <= hi + niceStep * 0.1; v += niceStep) {
+            if (v >= domainMin - 0.001 && v <= domainMax + 0.001) ticks.push(+v.toFixed(1));
+        }
+        return ticks;
+    }
+    const yTicks = niceTicks(domainMin, domainMax, 5);
+
+    /* ---- Determine colour theme based on temperature range ---- */
+    // Cold (any temp below 0) → blue/cyan palette
+    // Mixed                   → purple gradient
+    // Hot (all above 25)      → orange/red palette
+    let lineColor, gradTop, gradBot, dotFill;
+    if (maxT < 0) {
+        lineColor = '#4dabf7'; gradTop = 'rgba(77,171,247,0.35)'; gradBot = 'rgba(77,171,247,0.02)'; dotFill = '#339af0';
+    } else if (minT < 0) {
+        lineColor = '#a855f7'; gradTop = 'rgba(168,85,247,0.35)'; gradBot = 'rgba(168,85,247,0.02)'; dotFill = '#9333ea';
+    } else if (minT > 25) {
+        lineColor = '#ff6b35'; gradTop = 'rgba(255,107,53,0.35)'; gradBot = 'rgba(255,107,53,0.02)'; dotFill = '#e64e1b';
+    } else {
+        lineColor = '#667eea'; gradTop = 'rgba(102,126,234,0.38)'; gradBot = 'rgba(118,75,162,0.04)'; dotFill = '#764ba2';
+    }
+
+    /* ---- Build SVG markup ---- */
+    // Gradient fill path: go to bottom-right corner, across to bottom-left, close
+    const fillPath = linePath + ` L ${xScale(23)} ${padT + chartH} L ${padL} ${padT + chartH} Z`;
+
+    let svg = `
+    <defs>
+        <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="${gradTop}"/>
+            <stop offset="100%" stop-color="${gradBot}"/>
+        </linearGradient>
+        <filter id="glow">
+            <feGaussianBlur stdDeviation="2.5" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+    </defs>
+
+    <!-- Chart background -->
+    <rect x="${padL}" y="${padT}" width="${chartW}" height="${chartH}"
+          rx="6" fill="#f8f9ff" stroke="#e8eaf6" stroke-width="1"/>
+
+    <!-- Y-axis grid lines & labels -->`;
+
+    yTicks.forEach(v => {
+        const y = yScale(v);
+        const isZero = Math.abs(v) < 0.001;
+        svg += `
+    <line x1="${padL}" y1="${y}" x2="${padL + chartW}" y2="${y}"
+          stroke="${isZero ? '#ef4444' : '#dde1f5'}"
+          stroke-width="${isZero ? 1.5 : 1}"
+          stroke-dasharray="${isZero ? '6,4' : '4,3'}"
+          opacity="${isZero ? 0.8 : 0.7}"/>
+    <text x="${padL - 8}" y="${y + 4}" text-anchor="end"
+          font-size="11" fill="${isZero ? '#ef4444' : '#888'}"
+          font-family="'Segoe UI', sans-serif" font-weight="${isZero ? '700' : '400'}">
+        ${v >= 0 ? '' : ''}${Math.round(v)}°
+    </text>`;
+    });
+
+    // Zero label annotation if visible
+    if (showZeroLine) {
+        svg += `<text x="${padL + chartW + 4}" y="${zeroY + 4}" font-size="10" fill="#ef4444"
+                      font-family="'Segoe UI', sans-serif" font-weight="700">0°</text>`;
+    }
+
+    // X-axis hour labels — show every 3 hours
+    svg += `<!-- X-axis labels -->`;
+    for (let i = 0; i < 24; i += 3) {
+        const x = xScale(i);
+        const h = hours[i];
+        const label = h === 0 ? '12am' : h === 12 ? '12pm' : h < 12 ? `${h}am` : `${h - 12}pm`;
+        svg += `
+    <text x="${x}" y="${padT + chartH + 18}" text-anchor="middle"
+          font-size="11" fill="#888" font-family="'Segoe UI', sans-serif">${label}</text>
+    <line x1="${x}" y1="${padT + chartH}" x2="${x}" y2="${padT + chartH + 5}"
+          stroke="#ccc" stroke-width="1"/>`;
+    }
+
+    // Gradient fill area
+    svg += `<path d="${fillPath}" fill="url(#areaGrad)"/>`;
+
+    // Main line
+    svg += `<path d="${linePath}" fill="none" stroke="${lineColor}"
+                  stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"
+                  filter="url(#glow)" opacity="0.95"/>`;
+
+    // Hover hit-area rects + dot markers
+    svg += `<!-- Data points & hover areas -->`;
+    temps.forEach((t, i) => {
+        const x = xScale(i);
+        const y = yScale(t);
+        const h = hours[i];
+        const label = h === 0 ? '12:00 AM' : h === 12 ? '12:00 PM' : h < 12 ? `${h}:00 AM` : `${h - 12}:00 PM`;
+        const sign = t >= 0 ? '' : '−';
+        const absT = Math.abs(t).toFixed(1);
+
+        // Only draw visible dot every 3 points to avoid clutter, but all get hover areas
+        const dotR = (i % 3 === 0 || i === 0 || i === 23) ? 4.5 : 0;
+        if (dotR > 0) {
+            svg += `<circle cx="${x}" cy="${y}" r="${dotR}" fill="${dotFill}"
+                            stroke="white" stroke-width="2" opacity="0.9"/>`;
+        }
+
+        // Transparent hover region
+        svg += `
+    <rect x="${x - chartW / (2 * 23)}" y="${padT}" width="${chartW / 23}" height="${chartH}"
+          fill="transparent" class="chart-hover"
+          data-temp="${sign}${absT}" data-hour="${label}"
+          data-x="${x}" data-y="${y}"/>`;
+    });
+
+    svg += `<!-- Axis lines -->
+    <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + chartH + 5}"
+          stroke="#bbb" stroke-width="1.5"/>
+    <line x1="${padL}" y1="${padT + chartH}" x2="${padL + chartW}" y2="${padT + chartH}"
+          stroke="#bbb" stroke-width="1.5"/>`;
+
+    svgEl.innerHTML = svg;
+
+    /* ---- Tooltip interaction ---- */
+    const wrapper = svgEl.parentElement;
+    const hoverRects = svgEl.querySelectorAll('.chart-hover');
+
+    // We need to map SVG coords → pixel coords for the tooltip
+    hoverRects.forEach(rect => {
+        rect.addEventListener('mouseenter', (e) => {
+            const svgRect = svgEl.getBoundingClientRect();
+            const scaleX = svgRect.width / W;
+            const scaleY = svgRect.height / H;
+
+            const dataX = parseFloat(rect.getAttribute('data-x'));
+            const dataY = parseFloat(rect.getAttribute('data-y'));
+
+            // Pixel position inside wrapper
+            const px = dataX * scaleX;
+            const py = dataY * scaleY;
+
+            const t = rect.getAttribute('data-temp');
+            const hr = rect.getAttribute('data-hour');
+            tooltip.textContent = `${t}°C  •  ${hr}`;
+            tooltip.style.opacity = '1';
+
+            // Centre the tooltip above the dot
+            const tipW = tooltip.offsetWidth || 120;
+            tooltip.style.left = (px - tipW / 2) + 'px';
+            tooltip.style.top = (py - 44) + 'px';
+
+            // Highlight dot
+            const dotEls = svgEl.querySelectorAll('circle');
+            dotEls.forEach(d => {
+                const dcx = parseFloat(d.getAttribute('cx'));
+                if (Math.abs(dcx - dataX) < 2) {
+                    d.setAttribute('r', '6.5');
+                    d.style.transition = 'r 0.15s';
+                }
+            });
+        });
+
+        rect.addEventListener('mouseleave', () => {
+            tooltip.style.opacity = '0';
+            svgEl.querySelectorAll('circle').forEach(d => d.setAttribute('r', '4.5'));
+        });
+    });
+}
+
+/* ============================================================
+   END SVG CHART
+   ============================================================ */
+
 function displayExtraInfo(data, lat, lon) {
     const w = data.current_weather;
     const currentHour = new Date().getHours();
     const humidity = data.hourly.relativehumidity_2m[currentHour];
-    
-    // Daily Indian tourist place
+
     const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
     const place = indianPlaces[dayOfYear % indianPlaces.length];
     document.getElementById("placeIcon").textContent = place.icon;
@@ -1094,14 +1268,12 @@ function displayExtraInfo(data, lat, lon) {
     document.getElementById("placeCategory").textContent = place.category;
     document.getElementById("placeBestTime").textContent = `Best: ${place.bestTime}`;
 
-    // Air Quality (simulated)
     const aqi = Math.floor(Math.random() * 150) + 20;
     document.getElementById("aqiLevel").textContent = aqi;
     document.getElementById("aqiStatus").textContent = aqi < 50 ? 'Good' : aqi < 100 ? 'Moderate' : aqi < 150 ? 'Unhealthy for Sensitive' : 'Unhealthy';
     document.getElementById("pm25").textContent = Math.floor(aqi * 0.4);
     document.getElementById("aqiProgress").style.width = (aqi / 200 * 100) + '%';
 
-    // Moon phase
     const moonPhases = [
         { name: "New Moon", icon: "🌑", illumination: "0%" },
         { name: "Waxing Crescent", icon: "🌒", illumination: "25%" },
@@ -1117,7 +1289,6 @@ function displayExtraInfo(data, lat, lon) {
     document.getElementById("moonPhase").textContent = moonPhase.name;
     document.getElementById("moonIllumination").textContent = `${moonPhase.illumination} illuminated`;
 
-    // Astronomical info
     const sunrise = new Date(data.daily.sunrise[0]);
     const sunset = new Date(data.daily.sunset[0]);
     const solarNoon = new Date((sunrise.getTime() + sunset.getTime()) / 2);
@@ -1126,7 +1297,6 @@ function displayExtraInfo(data, lat, lon) {
     document.getElementById("goldenHour").textContent = goldenHourStart.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     document.getElementById("starVisibility").textContent = data.hourly.cloudcover[currentHour] < 30 ? 'Excellent' : data.hourly.cloudcover[currentHour] < 70 ? 'Good' : 'Poor';
 
-    // Seasonal activities
     const month = new Date().getMonth();
     const seasons = [
         { name: "Winter", activities: "🎿 Skiing in Himalayas, 🏖️ Beach visits, 🚶 City tours" },
@@ -1137,49 +1307,39 @@ function displayExtraInfo(data, lat, lon) {
     const season = seasons[Math.floor(month / 3)];
     document.getElementById("seasonalActivities").innerHTML = `<strong>${season.name}</strong><br>${season.activities}`;
 
-    // Weather fact
     document.getElementById("weatherFact").textContent = weatherFacts[Math.floor(Math.random() * weatherFacts.length)];
 
-    // Extra stats
     document.getElementById("dewPoint").textContent = Math.round(w.temperature - (100 - humidity) / 5);
     document.getElementById("precipitation").textContent = (Math.random() * 5).toFixed(1);
     document.getElementById("windGust").textContent = Math.round(w.windspeed * 1.5);
     document.getElementById("weatherMood").textContent = w.temperature > 20 && data.hourly.cloudcover[currentHour] < 50 ? '😊' : w.temperature < 10 ? '🥶' : '😐';
-    
+
     const outdoorScore = Math.max(0, Math.min(10, 10 - (Math.abs(w.temperature - 22) / 3) - (data.hourly.cloudcover[currentHour] / 20) - (w.windspeed / 10)));
     document.getElementById("outdoorIndex").textContent = outdoorScore.toFixed(1);
-    
+
     document.getElementById("heatIndex").textContent = Math.round(w.temperature + (humidity - 40) * 0.1);
     document.getElementById("windChill").textContent = Math.round(w.temperature - (w.windspeed * 0.5));
     document.getElementById("rainbowChance").textContent = (data.hourly.precipitation_probability[currentHour] > 20 && data.hourly.cloudcover[currentHour] < 80) ? Math.floor(Math.random() * 40 + 20) : Math.floor(Math.random() * 20);
 
-    // Clothing advice
     const clothingHTML = [];
-
     if (w.temperature < 10) {
         clothingHTML.push(clothingItem("🧥", "Heavy Jacket", "heavy jacket"));
         clothingHTML.push(clothingItem("🧣", "Scarf", "scarf"));
         clothingHTML.push(clothingItem("🧤", "Gloves", "gloves"));
-    }
-    else if (w.temperature < 20) {
+    } else if (w.temperature < 20) {
         clothingHTML.push(clothingItem("🧥", "Light Jacket", "light jacket"));
         clothingHTML.push(clothingItem("👖", "Long Pants", "men trousers"));
         clothingHTML.push(clothingItem("👟", "Sneakers", "sneakers"));
-    }
-    else {
+    } else {
         clothingHTML.push(clothingItem("👕", "T-Shirt", "t shirt"));
         clothingHTML.push(clothingItem("🩳", "Shorts", "men shorts"));
         clothingHTML.push(clothingItem("🕶️", "Sunglasses", "sunglasses"));
     }
-
     if (data.hourly.precipitation_probability[currentHour] > 30) {
         clothingHTML.push(clothingItem("☂️", "Umbrella", "umbrella"));
     }
-
     document.getElementById("clothingAdvice").innerHTML = clothingHTML.join("");
 
-
-    // Activity suggestions
     const activityHTML = [];
     if (w.temperature > 15 && w.temperature < 30 && data.hourly.cloudcover[currentHour] < 50) {
         activityHTML.push('<div class="activity-card">🚴 Cycling</div>');
@@ -1199,7 +1359,6 @@ function displayExtraInfo(data, lat, lon) {
     }
     document.getElementById("activitySuggestions").innerHTML = activityHTML.join('');
 
-    // Climate info
     const climateZones = {
         tropical: { range: "20-35°C", type: "Tropical" },
         temperate: { range: "10-25°C", type: "Temperate" },
@@ -1210,7 +1369,6 @@ function displayExtraInfo(data, lat, lon) {
     document.getElementById("currentSeason").textContent = season.name;
     document.getElementById("typicalRange").textContent = zone.range;
 
-    // Weather alerts
     let alerts = '';
     if (w.temperature > 35) alerts += '🌡️ Heat Advisory<br>';
     if (w.temperature < 0) alerts += '❄️ Freeze Warning<br>';
@@ -1219,7 +1377,6 @@ function displayExtraInfo(data, lat, lon) {
     if (data.hourly.uv_index[currentHour] > 8) alerts += '☀️ High UV Alert<br>';
     document.getElementById("weatherAlerts").innerHTML = alerts || 'No active alerts';
 
-    // Photography tips
     let photoTips = '';
     if (currentHour < 8 || currentHour > 18) photoTips += '✨ Golden hour lighting<br>';
     if (data.hourly.cloudcover[currentHour] < 30) photoTips += '🌅 Perfect for landscapes<br>';
@@ -1227,7 +1384,6 @@ function displayExtraInfo(data, lat, lon) {
     if (data.hourly.precipitation_probability[currentHour] > 30) photoTips += '🌧️ Rain photography<br>';
     document.getElementById("photoTips").innerHTML = photoTips || 'Good conditions for general photography';
 
-    // Gardening index
     const plantingScore = w.temperature > 15 && w.temperature < 30 && data.hourly.precipitation_probability[currentHour] < 50 ? 'Excellent' : 'Moderate';
     const wateringScore = humidity < 50 && w.temperature > 20 ? 'High Need' : 'Low Need';
     const gardeningActivity = w.temperature > 10 && w.temperature < 30 ? 'Plant & Prune' : 'Indoor Care';
@@ -1270,7 +1426,6 @@ function hideAll() {
     document.getElementById("weather").style.display = "none";
 }
 
-// Auto-update every 10 minutes
 let autoUpdateInterval;
 function startAutoUpdate() {
     if (autoUpdateInterval) clearInterval(autoUpdateInterval);
@@ -1286,13 +1441,6 @@ document.addEventListener("click", function (e) {
         window.open(item.dataset.link, "_blank");
     }
 });
-
 </script>
 </body>
-
 </html>
-
-
-
-
-
